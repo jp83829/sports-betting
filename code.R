@@ -1,4 +1,4 @@
-# installing packages
+# install packages
 install.packages("pacman")
 pacman::p_load(
   rio,         # importing data  
@@ -9,7 +9,7 @@ pacman::p_load(
   factoextra   # FAMD
 )
 
-# importing datasets
+# import datasets
 fight_raw <- import("ufc_data_till_UFC_292.csv")
 fighter_raw <- import("ufc-fighters-statistics.csv")
 
@@ -21,8 +21,27 @@ names(fighter_raw)
 fighter <- fighter_raw %>%
   select(name, date_of_birth)
 
+# standardize variables
+pct <- c('R_SIG_STR_pct', 'B_SIG_STR_pct') #character percentage to be converted to numeric 
+fight <- fight_raw %>% 
+  mutate_at(vars(pct), ~ str_replace(., "%", "")) %>%
+  mutate_at(vars(pct), as.numeric) %>%
+  mutate(R_TOTAL_STR_pct=as.numeric(R_TOTAL_STR.)) #character "x of y" to be converted to percentage 
+one <- assapply(strsplit(fight_raw$R_TOTAL_STR.,' '), function(x) x[1])
+
+count <- c('R_TOTAL_STR.', 'B_TOTAL_STR.')
+
+# sample test
+set.seed(2024)
+part_df <- fight %>% 
+  slice_sample(n=100)
+
 # FAMD
-library(FactoMineR)
-fight_raw %>%
-  FAMD(ncp = 10, graph = TRUE) %>%
-  print()
+exc <- c('R_SIG_STR.', 'B_SIG_STR.', 'R_TOTAL_STR.') # supplementary variable, which is not included in the analysis
+res.famd <- part_df %>%
+  FAMD(ncp = 10, 
+       sup.var = var(exc),  
+       graph = TRUE)
+
+fviz_screeplot(res.famd)
+
