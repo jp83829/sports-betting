@@ -26,7 +26,7 @@ pct <- c('R_SIG_STR_pct', 'B_SIG_STR_pct') #character percentage to be converted
 fight <- fight_raw %>% 
   mutate_at(vars(pct), ~ str_replace(., "%", "")) %>%
   mutate_at(vars(pct), as.numeric) %>%
-  mutate(R_TOTAL_STR_pct=str_split(R_TOTAL_STR., ' of ', n = 2, simplify = T) %>% as.numeric() ) #character "x of y" to be converted to percentage 
+  mutate(R_TOTAL_STR_pct=str_split(R_TOTAL_STR., ' of ', n = 2, simplify = T) %>% as.numeric() %>% [, 1]/[, 2]) #character "x of y" to be converted to percentage 
 
 
 
