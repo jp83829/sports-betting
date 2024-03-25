@@ -25,13 +25,12 @@ fighter <- fighter_raw %>%
 pct <- c('R_SIG_STR_pct', 'B_SIG_STR_pct') #character percentage to be converted to numeric 
 count <- c('R_TOTAL_STR.', 'B_TOTAL_STR.') #character "x of y" to be converted to percentage
 fight <- fight_raw %>% 
-  mutate_at(vars(pct), ~ str_replace(., "%", "") %>% as.numeric) %>%
-  mutate_at(vars(count), ~ as.numeric(str_split(., ' of ', n = 2, simplify = T))[, 1]/as.numeric(str_split(., ' of ', n = 2, simplify = T))[, 2] ))
+#  mutate_at(vars(pct), ~ str_replace(., "%", "") %>% as.numeric) %>%
+  mutate_at(vars(count), ~ as.numeric(str_split(., ' of ', n = 2, simplify = T))[, 1]/as.numeric(str_split(., ' of ', n = 2, simplify = T))[, 2] )
+fight_raw$R_TOTAL_STR. %>% str_split(., ' of ', n = 2, simplify = T)[[,1]]
+View(fight)
 
 
-
-
-count <- c('R_TOTAL_STR.', 'B_TOTAL_STR.')
 
 # sample test
 set.seed(2024)
@@ -46,4 +45,3 @@ res.famd <- part_df %>%
        graph = TRUE)
 
 fviz_screeplot(res.famd)
-
