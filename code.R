@@ -6,8 +6,9 @@ pacman::p_load(
   tidyverse,   # data management and visualization
   magrittr,
   FactoMineR,  # FAMD
-  factoextra  # FAMD
-)
+  factoextra,  # FAMD
+  skimr
+  )
 
 # import datasets
 fight_raw <- import("ufc_data_till_UFC_292.csv")
@@ -50,5 +51,6 @@ res.famd <- part_df %>%
        sup.var = var(exc),  
        graph = TRUE)
 
+get_eigenvalue(res.famd)
 fviz_screeplot(res.famd)
 
