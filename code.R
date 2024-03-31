@@ -31,7 +31,8 @@ fight <- fight_raw %>%
   mutate_at(vars(count), ~ as.numeric(str_split_i(., " of ", 1))/as.numeric(str_split_i(., " of ", 2)) ) %>%
   mutate_at(vars(time), ~ as.numeric(str_split_i(., ":", 1))+as.numeric(str_split_i(., ":", 2))/60) %>%
   mutate_all(~ifelse(is.nan(.), 0, .)) %>%
-  mutate_all(~ifelse(is.na(.), 0, .))
+  mutate_all(~ifelse(is.na(.), 0, .)) %>%
+  subset(Winner!="")
 
 View(fight)
 skim(fight)
@@ -57,7 +58,7 @@ inc <- c("R_KD", "B_KD", "R_SIG_STR.", "B_SIG_STR.", "R_TOTAL_STR.", "B_TOTAL_ST
          "R_BODY", "B_BODY", "R_DISTANCE", "B_DISTANCE", "win_by", "last_round",        
          "Fight_type")
 res.famd <- part_df[, inc] %>%
-  FAMD(ncp = 5, 
+  FAMD(ncp = 4, 
        graph = TRUE)
 
 get_eigenvalue(res.famd)
@@ -78,58 +79,30 @@ fviz_contrib(res.famd, "var", axes = 1)
 fviz_contrib(res.famd, "var", axes = 2)
 
 
-#FAMD2 - transform data into 1 fighter per row (find higher correlation between variables)
+#transform data into 1 fighter per row (find higher correlation between variables)
 
 #R data
 rdf <- fight %>% 
+  mutate(opp = B_fighter) %>%
   select(! starts_with("b_")) %>%
   mutate(rb = "R") %>%
   rename_all(~stringr::str_replace_all(.,"^R_",""))
 
 bdf <- fight %>% 
+  mutate(opp = R_fighter) %>%
   select(! starts_with("r_")) %>%
   mutate(rb = "B") %>%
   rename_all(~stringr::str_replace_all(.,"^B_",""))
 
 rb_sep <- rbind(rdf, bdf) %>%
-  mutate(win_lose = ifelse(fighter==Winner,'1','0'))
+  mutate(win_lose = ifelse(fighter==Winner,'1','0')) %>%
+  select(-Winner)
 
 wrong_odds <- rb_sep %>%
-  subset((rb=='R' & win_lose=='0') | (rb=='B' & win_lose=='1') )
+  subset((rb=='R' & win_lose=='0') | (rb=='B' & win_lose=='1') ) 
 
 num <- c("KD", "SIG_STR.", "TOTAL_STR.", "SUB_ATT", "CTRL", "HEAD", 
          "BODY", "DISTANCE", "win_by", "last_round")
 rb_sep[, num] %>% 
   ggpairs()
-
-# sample test
-set.seed(2024)
-part_df <- rb_sep %>% 
-  slice_sample(n=100)
-
-
-inc <- c("KD", "SIG_STR.", "TOTAL_STR.", 
-         "SUB_ATT", "CTRL","HEAD", 
-         "BODY", "DISTANCE", "win_by", "last_round",        
-         "Fight_type", "win_lose")
-res.famd <- part_df[, inc] %>%
-  FAMD(ncp = 5, 
-       graph = TRUE)
-
-get_eigenvalue(res.famd)
-fviz_screeplot(res.famd)
-var <- get_famd_var(res.famd) 
-#Coordinates of variables
-head(var$coord)
-# Cos2: quality of representation on the factor map
-head(var$cos2)
-# Contributions to the  dimensions
-head(var$contrib)
-
-# Plot of variables
-fviz_famd_var(res.famd, repel = TRUE)
-# Contribution to the first dimension
-fviz_contrib(res.famd, "var", axes = 1)
-# Contribution to the second dimension
-fviz_contrib(res.famd, "var", axes = 2)
 
