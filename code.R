@@ -55,11 +55,19 @@ exc <- c('R_SIG_STR_pct', 'B_SIG_STR_pct', 'R_TD_pct', 'B_TD_pct', 'R_REV',
          "B_CLINCH", "R_GROUND", "B_GROUND", "R_LEG", "B_LEG") # supplementary variable, which is not included in the analysis
 inc <- c("R_KD", "B_KD", "R_SIG_STR.", "B_SIG_STR.", "R_TOTAL_STR.", "B_TOTAL_STR.", 
          "R_SUB_ATT", "B_SUB_ATT", "R_CTRL", "B_CTRL", "R_HEAD", "B_HEAD", 
-         "R_BODY", "B_BODY", "R_DISTANCE", "B_DISTANCE", "win_by", "last_round",        
-         "Fight_type")
+         "R_BODY", "B_BODY", "R_DISTANCE", "B_DISTANCE", "win_by", "last_round",
+         "Fight_type", "Winner"
+         )
 res.famd <- part_df[, inc] %>%
-  FAMD(ncp = 4, 
+  FAMD(ncp = 6, 
+       sup.var = c(-2),
        graph = TRUE)
+
+fviz_mfa_ind(res.famd, 
+             habillage = "Fight_type", # color by groups 
+             addEllipses = TRUE, ellipse.type = "confidence", 
+             repel = TRUE # Avoid text overlapping
+) 
 
 get_eigenvalue(res.famd)
 fviz_screeplot(res.famd)
