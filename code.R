@@ -15,13 +15,13 @@ pacman::p_load(
 fight_raw <- import("ufc_data_till_UFC_292.csv")
 fighter_raw <- import("ufc-fighters-statistics.csv")
 
-View(fight_raw)
+View(fighter)
 View(fighter_raw)
 names(fight_raw)
 names(fighter_raw)
 
 fighter <- fighter_raw %>%
-  select(name, date_of_birth)
+  select(name, height_cm, reach_in_cm, stance, date_of_birth)
 
 # standardize variables
 count <- c('R_SIG_STR.', 'B_SIG_STR.', 'R_TOTAL_STR.', 'B_TOTAL_STR.', 'R_TD', 
