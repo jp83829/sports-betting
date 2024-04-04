@@ -8,20 +8,28 @@ pacman::p_load(
   FactoMineR,  # FAMD
   factoextra,  # FAMD
   skimr,
-  GGally 
+  GGally,
+  eeptools 
   )
 
 # import datasets
 fight_raw <- import("ufc_data_till_UFC_292.csv")
 fighter_raw <- import("ufc-fighters-statistics.csv")
 
-View(fighter)
-View(fighter_raw)
-names(fight_raw)
-names(fighter_raw)
+age_calc_miss <- function(dob, enddate = Sys.Date(), units = "months", precise = TRUE){
+  retval <- rep(NA_real_, length(dob))
+  miss <- is.na(dob)
+  retval[!miss] <- eeptools::age_calc(dob = dob[!miss], 
+                                      enddate = enddate, 
+                                      units = units, 
+                                      precise = precise)
+  retval
+  }
 
 fighter <- fighter_raw %>%
-  select(name, height_cm, reach_in_cm, stance, date_of_birth)
+  select(name, height_cm, reach_in_cm, stance, date_of_birth) %>%
+  mutate(age = floor(age_calc_miss(date_of_birth, units = "years"))) %>%
+  subset(! name %in% c(name[duplicated(name)]))
 
 # standardize variables
 count <- c('R_SIG_STR.', 'B_SIG_STR.', 'R_TOTAL_STR.', 'B_TOTAL_STR.', 'R_TD', 
@@ -32,7 +40,14 @@ fight <- fight_raw %>%
   mutate_at(vars(time), ~ as.numeric(str_split_i(., ":", 1))+as.numeric(str_split_i(., ":", 2))/60) %>%
   mutate_all(~ifelse(is.nan(.), 0, .)) %>%
   mutate_all(~ifelse(is.na(.), 0, .)) %>%
-  subset(Winner!="")
+  subset(Winner!="") %>%
+  left_join(fighter,
+    by = c("R_fighter" = "name"),
+    suffix = c(".x", ".y"),
+    keep = NULL)
+?left_join
+
+
 
 View(fight)
 skim(fight)
@@ -113,4 +128,5 @@ num <- c("KD", "SIG_STR.", "TOTAL_STR.", "SUB_ATT", "CTRL", "HEAD",
          "BODY", "DISTANCE", "win_by", "last_round")
 rb_sep[, num] %>% 
   ggpairs()
+
 
