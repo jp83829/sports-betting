@@ -71,13 +71,11 @@ fight <- fight_raw %>%
   mutate_at("Fight_type", ~ifelse(grepl("Light Heavyweight", .), "Light Heavyweight Bout", .)) %>%
   mutate_at("Fight_type", ~ifelse(grepl("Heavyweight", .) & ! grepl("Light", .), "Heavyweight Bout", .)) %>% 
   
-  subset(Winner!="" & 
+  subset(Winner!="" & ! is.na(R_height_cm) & ! is.na(B_height_cm) &
            Fight_type %in% c("Flyweight Bout", "Bantamweight Bout",
                             "Featherweight Bout", "Lightweight Bout", "Welterweight Bout",
                             "Middleweight Bout", "Light Heavyweight Bout", "Heavyweight Bout")) 
 
-unique(fight$Fight_type) 
-?fct_recode
 View(fight)
 skim(fight)
 
@@ -105,7 +103,7 @@ inc <- c("R_KD", "B_KD", "R_SIG_STR.", "B_SIG_STR.", "R_TOTAL_STR.", "B_TOTAL_ST
          )
 res.famd <- part_df[, inc] %>%
   FAMD(ncp = 6, 
-       sup.var = c(-2),
+       sup.var = c(-10),
        graph = TRUE)
 
 fviz_mfa_ind(res.famd, 
@@ -132,6 +130,32 @@ fviz_contrib(res.famd, "var", axes = 1)
 fviz_contrib(res.famd, "var", axes = 2)
 
 
+#FAMD by fight_type
+
+par(mfrow=c(2,2), mar=c(4,4,2,1))
+# Separate PCA plot for each Species
+# Apply our defined PCA-function where each unique INDICES are handled as a separate function call
+by(iris, INDICES=iris$Species, FUN=function(z){
+  # Use numeric fields for the PCA
+  pca <- prcomp(z[,unlist(lapply(z, FUN=class))=="numeric"])
+  plot(pca$x[,1:2], pch=16, main=z[1,"Species"]) # 2 first principal components
+  z
+})
+
+# Color annotation
+# Use numeric fields for the PCA
+pca <- prcomp(iris[,unlist(lapply(iris, FUN=class))=="numeric"])
+plot(pca$x[,1:2], pch=16, col=as.numeric(iris[,"Species"]), main="Color annotation") # 2 first principal components
+legend("bottom", pch=16, col=unique(as.numeric(iris[,"Species"])), legend=unique(iris[,"Species"]))
+
+
+
+
+
+
+
+
+
 #transform data into 1 fighter per row (find higher correlation between variables)
 
 #R data
@@ -153,8 +177,3 @@ rb_sep <- rbind(rdf, bdf) %>%
 
 wrong_odds <- rb_sep %>%
   subset((rb=='R' & win_lose=='0') | (rb=='B' & win_lose=='1') ) 
-
-num <- c("KD", "SIG_STR.", "TOTAL_STR.", "SUB_ATT", "CTRL", "HEAD", 
-         "BODY", "DISTANCE", "win_by", "last_round")
-rb_sep[, num] %>% 
-  ggpairs()
