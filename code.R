@@ -9,7 +9,8 @@ pacman::p_load(
   factoextra,  # FAMD
   skimr,
   GGally,
-  eeptools 
+  eeptools,
+  tibble
   )
 
 # import datasets
@@ -79,11 +80,6 @@ fight <- fight_raw %>%
 View(fight)
 skim(fight)
 
-num <- c("R_KD", "B_KD", "R_SIG_STR.", "B_SIG_STR.", "R_TOTAL_STR.", "B_TOTAL_STR.", 
-         "R_SUB_ATT", "B_SUB_ATT", "R_CTRL", "B_CTRL", "R_HEAD", "B_HEAD", 
-         "R_BODY", "B_BODY", "R_DISTANCE", "B_DISTANCE", "win_by", "last_round")
-fight[, num] %>% 
-  ggpairs()
 
 # sample test
 set.seed(2024)
@@ -102,7 +98,7 @@ inc <- c("R_KD", "B_KD", "R_SIG_STR.", "B_SIG_STR.", "R_TOTAL_STR.", "B_TOTAL_ST
          "B_height_cm", "B_reach_in_cm", "B_stance", "B_age"
          )
 res.famd <- part_df[, inc] %>%
-  FAMD(ncp = 6, 
+  FAMD(ncp = 4, 
        sup.var = c(-10),
        graph = TRUE)
 
@@ -132,26 +128,32 @@ fviz_contrib(res.famd, "var", axes = 2)
 
 #FAMD by fight_type
 
-par(mfrow=c(2,2), mar=c(4,4,2,1))
-# Separate PCA plot for each Species
+par(mfrow=c(8,2), mar=c(4,4,2,1))
+
+# Separate PCA plot for each Fight type
 # Apply our defined PCA-function where each unique INDICES are handled as a separate function call
-by(iris, INDICES=iris$Species, FUN=function(z){
-  # Use numeric fields for the PCA
-  pca <- prcomp(z[,unlist(lapply(z, FUN=class))=="numeric"])
-  plot(pca$x[,1:2], pch=16, main=z[1,"Species"]) # 2 first principal components
-  z
-})
+by(part_df, INDICES=part_df$Fight_type, FUN=function(z){
+  res.famd <- FAMD(z[, inc], ncp = 3, sup.var = c(-10), graph = T)
+
+  var <- get_famd_var(res.famd) 
+  # Contributions to the  dimensions
+  rank %>%
+    var$contrib %>%
+    arrange([desc(Dim.1), desc(Dim.2), desc(Dim.3), desc(Dim.4))
+  ?data.table
+  # Plot of variables
+  fviz_famd_var(res.famd, repel = TRUE)
+  # Contribution to the first dimension
+  fviz_contrib(res.famd, "var", axes = 1)
+  # Contribution to the second dimension
+  fviz_contrib(res.famd, "var", axes = 2)
+  })
 
 # Color annotation
 # Use numeric fields for the PCA
-pca <- prcomp(iris[,unlist(lapply(iris, FUN=class))=="numeric"])
-plot(pca$x[,1:2], pch=16, col=as.numeric(iris[,"Species"]), main="Color annotation") # 2 first principal components
-legend("bottom", pch=16, col=unique(as.numeric(iris[,"Species"])), legend=unique(iris[,"Species"]))
-
-
-
-
-
+pca <- FAMD(part_df[, inc], ncp = 6, sup.var = c(-10), graph = F)
+plot(pca$x[,1:2], pch=16, col=as.numeric(part_df[,"Fight_type"]), main="Color annotation") # 2 first principal components
+legend("bottom", pch=16, col=unique(as.numeric(part_df[,"Fight_type"])), legend=unique(part_df[,"Fight_type"]))
 
 
 
