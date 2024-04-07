@@ -137,9 +137,12 @@ by(part_df, INDICES=part_df$Fight_type, FUN=function(z){
 
   var <- get_famd_var(res.famd) 
   # Contributions to the  dimensions
-  rank %>%
+  rank <-
     var$contrib %>%
-    arrange([desc(Dim.1), desc(Dim.2), desc(Dim.3), desc(Dim.4))
+    as_tibble() %>%
+    setNames(c('PCA1', 'PCA2', 'PCA3', 'PCA4')) %>%
+    arrange(desc(PCA1), desc(PCA2), desc(PCA3), desc(PCA4))
+  
   ?data.table
   # Plot of variables
   fviz_famd_var(res.famd, repel = TRUE)
