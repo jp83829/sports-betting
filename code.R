@@ -9,14 +9,14 @@ pacman::p_load(
   factoextra,  # FAMD
   skimr,
   GGally,
-  eeptools,
-  tibble
+  eeptools
   )
 
-# import datasets
+# import data sets
 fight_raw <- import("ufc_data_till_UFC_292.csv")
 fighter_raw <- import("ufc-fighters-statistics.csv")
 
+# age function
 age_calc_miss <- function(dob, enddate = Sys.Date(), units = "months", precise = TRUE){
   retval <- rep(NA_real_, length(dob))
   miss <- is.na(dob)
@@ -27,6 +27,7 @@ age_calc_miss <- function(dob, enddate = Sys.Date(), units = "months", precise =
   retval
   }
 
+# pre-process demographics data set 
 fighter <- fighter_raw %>%
   mutate(age = floor(age_calc_miss(date_of_birth, units = "years"))) %>%
   select(name, height_cm, reach_in_cm, stance, age) %>%
@@ -34,15 +35,15 @@ fighter <- fighter_raw %>%
   mutate_at(c("height_cm","age"), ~ifelse(is.na(.), median(.,na.rm=T), .)) %>%
   mutate_at("reach_in_cm", ~ifelse(is.na(.), height_cm, .)) 
 
-# rename for merging data
 
+# rename for merging data
 fighter_R <- fighter %>%
   rename_all( list(~paste0("R_", .)))
 
 fighter_B <- fighter %>%
   rename_all( list(~paste0("B_", .)))
 
-# standardize variables
+# pre-process/data merge
 count <- c('R_SIG_STR.', 'B_SIG_STR.', 'R_TOTAL_STR.', 'B_TOTAL_STR.', 'R_TD', 
            'B_TD', "R_HEAD", "B_HEAD", "R_BODY", "B_BODY", "R_DISTANCE", "B_DISTANCE") #character "x of y" to be converted to percentage
 time <- c('R_CTRL', 'B_CTRL') #character time span to be converted to numeric
@@ -71,22 +72,20 @@ fight <- fight_raw %>%
   mutate_at("Fight_type", ~ifelse(grepl("Middleweight", .), "Middleweight Bout", .)) %>%
   mutate_at("Fight_type", ~ifelse(grepl("Light Heavyweight", .), "Light Heavyweight Bout", .)) %>%
   mutate_at("Fight_type", ~ifelse(grepl("Heavyweight", .) & ! grepl("Light", .), "Heavyweight Bout", .)) %>% 
-  
   subset(Winner!="" & ! is.na(R_height_cm) & ! is.na(B_height_cm) &
            Fight_type %in% c("Flyweight Bout", "Bantamweight Bout",
                             "Featherweight Bout", "Lightweight Bout", "Welterweight Bout",
                             "Middleweight Bout", "Light Heavyweight Bout", "Heavyweight Bout")) 
 
+# final data for analysis
 View(fight)
-skim(fight)
 
-
-# sample test
+# sampling for testing
 set.seed(2024)
 part_df <- fight %>% 
   slice_sample(n=100)
 
-# FAMD
+# FAMD - general (whole)
 exc <- c('R_SIG_STR_pct', 'B_SIG_STR_pct', 'R_TD_pct', 'B_TD_pct', 'R_REV', 
          'B_REV', 'last_round_time', 'R_fighter', 'B_fighter', "Format",
          "Referee", "date", "location", 'Winner', 'R_TD', 'B_TD', "R_CLINCH", 
@@ -97,9 +96,10 @@ inc <- c("R_KD", "B_KD", "R_SIG_STR.", "B_SIG_STR.", "R_TOTAL_STR.", "B_TOTAL_ST
          "Fight_type", "Winner", "R_height_cm", "R_reach_in_cm", "R_stance", "R_age",
          "B_height_cm", "B_reach_in_cm", "B_stance", "B_age"
          )
+
 res.famd <- part_df[, inc] %>%
-  FAMD(ncp = 4, 
-       sup.var = c(-10),
+  FAMD(ncp = 10, 
+       sup.var = c(-10, -9), #supp variables: Fight_type, Winner
        graph = TRUE)
 
 fviz_mfa_ind(res.famd, 
@@ -116,6 +116,10 @@ head(var$coord)
 # Cos2: quality of representation on the factor map
 head(var$cos2)
 # Contributions to the  dimensions
+rank <-
+  var$contrib %>%
+  data.frame %>%
+  arrange(desc(Dim.1), desc(Dim.2), desc(Dim.3), desc(Dim.4))
 head(var$contrib)
 
 # Plot of variables
@@ -126,14 +130,14 @@ fviz_contrib(res.famd, "var", axes = 1)
 fviz_contrib(res.famd, "var", axes = 2)
 
 
-#FAMD by fight_type
+# FAMD by fight_type (whole)
 
 par(mfrow=c(8,2), mar=c(4,4,2,1))
 
 # Separate PCA plot for each Fight type
 # Apply our defined PCA-function where each unique INDICES are handled as a separate function call
 by(part_df, INDICES=part_df$Fight_type, FUN=function(z){
-  res.famd <- FAMD(z[, inc], ncp = 3, sup.var = c(-10), graph = T)
+  res.famd <- FAMD(z[, inc], ncp = 4, sup.var = c(-10), graph = T)
 
   var <- get_famd_var(res.famd) 
   # Contributions to the  dimensions
@@ -182,3 +186,6 @@ rb_sep <- rbind(rdf, bdf) %>%
 
 wrong_odds <- rb_sep %>%
   subset((rb=='R' & win_lose=='0') | (rb=='B' & win_lose=='1') ) 
+
+# FAMD by fight_type (whole transformed)
+# FAMD by fight_type (wrong odds transformed)
