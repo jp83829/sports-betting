@@ -97,10 +97,11 @@ inc <- c("R_KD", "B_KD", "R_SIG_STR.", "B_SIG_STR.", "R_TOTAL_STR.", "B_TOTAL_ST
          "B_height_cm", "B_reach_in_cm", "B_stance", "B_age"
          )
 
-res.famd <- part_df[, inc] %>%
-  FAMD(ncp = 10, 
-       sup.var = c(-10, -9), #supp variables: Fight_type, Winner
-       graph = TRUE)
+inc <- part_df[, inc]
+res.famd <- inc %>%
+  FAMD(ncp = 16, 
+       sup.var = 20, #supp variables: Winner
+       graph = F)
 
 fviz_mfa_ind(res.famd, 
              habillage = "Fight_type", # color by groups 
@@ -109,18 +110,12 @@ fviz_mfa_ind(res.famd,
 ) 
 
 get_eigenvalue(res.famd)
-fviz_screeplot(res.famd)
 var <- get_famd_var(res.famd) 
-#Coordinates of variables
-head(var$coord)
-# Cos2: quality of representation on the factor map
-head(var$cos2)
+
 # Contributions to the  dimensions
 rank <-
   var$contrib %>%
-  data.frame %>%
-  arrange(desc(Dim.1), desc(Dim.2), desc(Dim.3), desc(Dim.4))
-head(var$contrib)
+  data.frame 
 
 # Plot of variables
 fviz_famd_var(res.famd, repel = TRUE)
@@ -132,22 +127,20 @@ fviz_contrib(res.famd, "var", axes = 2)
 
 # FAMD by fight_type (whole)
 
-par(mfrow=c(8,2), mar=c(4,4,2,1))
+par(mfrow=c(8,3), mar=c(4,4,2,1))
 
 # Separate PCA plot for each Fight type
 # Apply our defined PCA-function where each unique INDICES are handled as a separate function call
-by(part_df, INDICES=part_df$Fight_type, FUN=function(z){
-  res.famd <- FAMD(z[, inc], ncp = 4, sup.var = c(-10), graph = T)
+by(inc, inc$Fight_type, FUN=function(z){
+  res.famd <- FAMD(z, ncp = 10, sup.var = 20, graph = F)
 
+  get_eigenvalue(res.famd) %>% print()
   var <- get_famd_var(res.famd) 
-  # Contributions to the  dimensions
+  # Contributions to the dimensions
   rank <-
     var$contrib %>%
-    as_tibble() %>%
-    setNames(c('PCA1', 'PCA2', 'PCA3', 'PCA4')) %>%
-    arrange(desc(PCA1), desc(PCA2), desc(PCA3), desc(PCA4))
-  
-  ?data.table
+    data.frame 
+
   # Plot of variables
   fviz_famd_var(res.famd, repel = TRUE)
   # Contribution to the first dimension
