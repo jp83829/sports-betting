@@ -9,7 +9,8 @@ pacman::p_load(
   factoextra,  # FAMD
   skimr,
   GGally,
-  eeptools
+  eeptools,
+  broom
   )
 
 # import data sets
@@ -94,7 +95,7 @@ inc <- c("R_KD", "B_KD", "R_SIG_STR.", "B_SIG_STR.", "R_TOTAL_STR.", "B_TOTAL_ST
          "R_SUB_ATT", "B_SUB_ATT", "R_CTRL", "B_CTRL", "R_HEAD", "B_HEAD", 
          "R_BODY", "B_BODY", "R_DISTANCE", "B_DISTANCE", "win_by", "last_round",
          "Fight_type", "Winner", "R_height_cm", "R_reach_in_cm", "R_stance", "R_age",
-         "B_height_cm", "B_reach_in_cm", "B_stance", "B_age"
+         "B_height_cm", "B_reach_in_cm", "B_stance", "B_age", 'R_fighter', 'B_fighter'
          )
 
 inc <- part_df[, inc]
@@ -131,6 +132,16 @@ par(mfrow=c(8,3), mar=c(4,4,2,1))
 
 # Separate PCA plot for each Fight type
 # Apply our defined PCA-function where each unique INDICES are handled as a separate function call
+res.famdby <- inc %>% 
+  nest_by(Fight_type) %>% 
+  mutate(pca = list(FAMD(data, ncp = 10, sup.var = 20, graph = F)))
+
+res.famdby %>% do(data.frame(
+  var = names(coef(.$pca)),
+  coef(summary(.$pca))) ) 
+res.famdby %>%
+  summarise(tidy(pca))
+
 by(inc, inc$Fight_type, FUN=function(z){
   res.famd <- FAMD(z, ncp = 10, sup.var = 20, graph = F)
 
