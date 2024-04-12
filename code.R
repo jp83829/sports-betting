@@ -10,7 +10,7 @@ pacman::p_load(
   skimr,
   GGally,
   eeptools,
-  broom
+  ramify 
   )
 
 # import data sets
@@ -86,7 +86,6 @@ set.seed(2024)
 part_df <- fight %>% 
   slice_sample(n=100)
 
-# FAMD - general (whole)
 exc <- c('R_SIG_STR_pct', 'B_SIG_STR_pct', 'R_TD_pct', 'B_TD_pct', 'R_REV', 
          'B_REV', 'last_round_time', 'R_fighter', 'B_fighter', "Format",
          "Referee", "date", "location", 'Winner', 'R_TD', 'B_TD', "R_CLINCH", 
@@ -96,9 +95,11 @@ inc <- c("R_KD", "B_KD", "R_SIG_STR.", "B_SIG_STR.", "R_TOTAL_STR.", "B_TOTAL_ST
          "R_BODY", "B_BODY", "R_DISTANCE", "B_DISTANCE", "win_by", "last_round",
          "Fight_type", "Winner", "R_height_cm", "R_reach_in_cm", "R_stance", "R_age",
          "B_height_cm", "B_reach_in_cm", "B_stance", "B_age", 'R_fighter', 'B_fighter'
-         )
+)
 
 inc <- part_df[, inc]
+
+# FAMD - general (whole)
 res.famd <- inc %>%
   FAMD(ncp = 16, 
        sup.var = 20, #supp variables: Winner
@@ -128,37 +129,34 @@ fviz_contrib(res.famd, "var", axes = 2)
 
 # FAMD by fight_type (whole)
 
-par(mfrow=c(8,3), mar=c(4,4,2,1))
-
 # Separate PCA plot for each Fight type
 # Apply our defined PCA-function where each unique INDICES are handled as a separate function call
 res.famdby <- inc %>% 
-  nest_by(Fight_type) %>% 
-  mutate(pca = list(FAMD(data, ncp = 10, sup.var = 20, graph = F)))
+  group_by(Fight_type) %>% 
+  do(pca = FAMD(., ncp = 6, sup.var = c(19,20,29,30), graph = F)) %>%
+  mutate(contrib = list(list()))
 
-res.famdby %>% do(data.frame(
-  var = names(coef(.$pca)),
-  coef(summary(.$pca))) ) 
-res.famdby %>%
-  summarise(tidy(pca))
-
-by(inc, inc$Fight_type, FUN=function(z){
-  res.famd <- FAMD(z, ncp = 10, sup.var = 20, graph = F)
-
-  get_eigenvalue(res.famd) %>% print()
-  var <- get_famd_var(res.famd) 
+for (i in 1:8) {
+  print(res.famdby[[1]][[i]])
+  print("---------------------")
+  
+  get_eigenvalue(res.famdby[[2]][[i]]) %>% print()
+  
   # Contributions to the dimensions
-  rank <-
-    var$contrib %>%
-    data.frame 
+  var <- get_famd_var(res.famdby[[2]][[i]]) 
+  res.famdby[[3]][[i]] <- var 
+  apply(var$contrib,2,max) %>% print()
+  rownames(var$contrib)[argmax(res.famdby[[3]][[i]][["contrib"]], rows = F)] %>% print()
 
+  par(mfrow=c(1,3))
   # Plot of variables
-  fviz_famd_var(res.famd, repel = TRUE)
+  fviz_famd_var(res.famdby[[2]][[i]], repel = TRUE) %>% print()
   # Contribution to the first dimension
-  fviz_contrib(res.famd, "var", axes = 1)
+  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 1) %>% print()
   # Contribution to the second dimension
-  fviz_contrib(res.famd, "var", axes = 2)
-  })
+  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 2) %>% print()
+  print("===================================================")
+}
 
 # Color annotation
 # Use numeric fields for the PCA
