@@ -81,23 +81,15 @@ fight <- fight_raw %>%
 # final data for analysis
 View(fight)
 
-# sampling for testing
-set.seed(2024)
-part_df <- fight %>% 
-  slice_sample(n=100)
-
-exc <- c('R_SIG_STR_pct', 'B_SIG_STR_pct', 'R_TD_pct', 'B_TD_pct', 'R_REV', 
-         'B_REV', 'last_round_time', 'R_fighter', 'B_fighter', "Format",
-         "Referee", "date", "location", 'Winner', 'R_TD', 'B_TD', "R_CLINCH", 
-         "B_CLINCH", "R_GROUND", "B_GROUND", "R_LEG", "B_LEG") # supplementary variable, which is not included in the analysis
+# variables 
 inc <- c("R_KD", "B_KD", "R_SIG_STR.", "B_SIG_STR.", "R_TOTAL_STR.", "B_TOTAL_STR.", 
          "R_SUB_ATT", "B_SUB_ATT", "R_CTRL", "B_CTRL", "R_HEAD", "B_HEAD", 
-         "R_BODY", "B_BODY", "R_DISTANCE", "B_DISTANCE", "win_by", "last_round",
+         "R_BODY", "B_BODY", "R_DISTANCE", "B_DISTANCE", "win_by", 
          "Fight_type", "Winner", "R_height_cm", "R_reach_in_cm", "R_stance", "R_age",
          "B_height_cm", "B_reach_in_cm", "B_stance", "B_age", 'R_fighter', 'B_fighter'
-)
+         )
 
-inc <- part_df[, inc]
+inc <- fight[, inc]
 
 # FAMD - general (whole)
 res.famd <- inc %>%
@@ -133,7 +125,7 @@ fviz_contrib(res.famd, "var", axes = 2)
 # Apply our defined PCA-function where each unique INDICES are handled as a separate function call
 res.famdby <- inc %>% 
   group_by(Fight_type) %>% 
-  do(pca = FAMD(., ncp = 6, sup.var = c(19,20,29,30), graph = F)) %>%
+  do(pca = FAMD(., ncp = 6, sup.var = c(17,18,19,28,29), graph = F)) %>%
   mutate(contrib = list(list()))
 
 for (i in 1:8) {
@@ -170,13 +162,13 @@ legend("bottom", pch=16, col=unique(as.numeric(part_df[,"Fight_type"])), legend=
 #transform data into 1 fighter per row (find higher correlation between variables)
 
 #R data
-rdf <- fight %>% 
+rdf <- inc %>% 
   mutate(opp = B_fighter) %>%
   select(! starts_with("b_")) %>%
   mutate(rb = "R") %>%
   rename_all(~stringr::str_replace_all(.,"^R_",""))
 
-bdf <- fight %>% 
+bdf <- inc %>% 
   mutate(opp = R_fighter) %>%
   select(! starts_with("r_")) %>%
   mutate(rb = "B") %>%
@@ -190,4 +182,57 @@ wrong_odds <- rb_sep %>%
   subset((rb=='R' & win_lose=='0') | (rb=='B' & win_lose=='1') ) 
 
 # FAMD by fight_type (whole transformed)
+res.famdby <- rb_sep %>% 
+  group_by(Fight_type) %>% 
+  do(pca = FAMD(., ncp = 5, sup.var = c(9,10,15,16,17), graph = F)) %>%
+  mutate(contrib = list(list()))
+
+for (i in 1:8) {
+  print(res.famdby[[1]][[i]])
+  print("---------------------")
+  
+  get_eigenvalue(res.famdby[[2]][[i]]) %>% print()
+  
+  # Contributions to the dimensions
+  var <- get_famd_var(res.famdby[[2]][[i]]) 
+  res.famdby[[3]][[i]] <- var 
+  apply(var$contrib,2,max) %>% print()
+  rownames(var$contrib)[argmax(res.famdby[[3]][[i]][["contrib"]], rows = F)] %>% print()
+  
+  par(mfrow=c(1,3))
+  # Plot of variables
+  fviz_famd_var(res.famdby[[2]][[i]], repel = TRUE) %>% print()
+  # Contribution to the first dimension
+  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 1) %>% print()
+  # Contribution to the second dimension
+  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 2) %>% print()
+  print("===================================================")
+}
+
 # FAMD by fight_type (wrong odds transformed)
+res.famdby <- wrong_odds %>% 
+  group_by(Fight_type) %>% 
+  do(pca = FAMD(., ncp = 5, sup.var = c(9,10,15,16,17,18), graph = F)) %>%
+  mutate(contrib = list(list()))
+
+for (i in 1:8) {
+  print(res.famdby[[1]][[i]])
+  print("---------------------")
+  
+  get_eigenvalue(res.famdby[[2]][[i]]) %>% print()
+  
+  # Contributions to the dimensions
+  var <- get_famd_var(res.famdby[[2]][[i]]) 
+  res.famdby[[3]][[i]] <- var 
+  apply(var$contrib,2,max) %>% print()
+  rownames(var$contrib)[argmax(res.famdby[[3]][[i]][["contrib"]], rows = F)] %>% print()
+  
+  par(mfrow=c(1,3))
+  # Plot of variables
+  fviz_famd_var(res.famdby[[2]][[i]], repel = TRUE) %>% print()
+  # Contribution to the first dimension
+  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 1) %>% print()
+  # Contribution to the second dimension
+  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 2) %>% print()
+  print("===================================================")
+}
