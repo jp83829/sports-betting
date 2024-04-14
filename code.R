@@ -125,7 +125,7 @@ fviz_contrib(res.famd, "var", axes = 2)
 # Apply our defined PCA-function where each unique INDICES are handled as a separate function call
 res.famdby <- inc %>% 
   group_by(Fight_type) %>% 
-  do(pca = FAMD(., ncp = 6, sup.var = c(17,18,19,28,29), graph = F)) %>%
+  do(pca = FAMD(., ncp = 10, sup.var = c(17,18,19,28,29), graph = F)) %>%
   mutate(contrib = list(list()))
 
 for (i in 1:8) {
@@ -150,13 +150,36 @@ for (i in 1:8) {
   print("===================================================")
 }
 
-# Color annotation
-# Use numeric fields for the PCA
-pca <- FAMD(part_df[, inc], ncp = 6, sup.var = c(-10), graph = F)
-plot(pca$x[,1:2], pch=16, col=as.numeric(part_df[,"Fight_type"]), main="Color annotation") # 2 first principal components
-legend("bottom", pch=16, col=unique(as.numeric(part_df[,"Fight_type"])), legend=unique(part_df[,"Fight_type"]))
+# FAMD by fight_type (whole) - underdog won
+wrong_odds <- inc %>%
+  subset(B_fighter==Winner)
 
+res.famdby <- wrong_odds %>% 
+  group_by(Fight_type) %>% 
+  do(pca = FAMD(., ncp = 10, sup.var = c(17,18,19,28,29), graph = F)) %>%
+  mutate(contrib = list(list()))
 
+for (i in 1:8) {
+  print(res.famdby[[1]][[i]])
+  print("---------------------")
+  
+  get_eigenvalue(res.famdby[[2]][[i]]) %>% print()
+  
+  # Contributions to the dimensions
+  var <- get_famd_var(res.famdby[[2]][[i]]) 
+  res.famdby[[3]][[i]] <- var 
+  apply(var$contrib,2,max) %>% print()
+  rownames(var$contrib)[argmax(res.famdby[[3]][[i]][["contrib"]], rows = F)] %>% print()
+  
+  par(mfrow=c(1,3))
+  # Plot of variables
+  fviz_famd_var(res.famdby[[2]][[i]], repel = TRUE) %>% print()
+  # Contribution to the first dimension
+  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 1) %>% print()
+  # Contribution to the second dimension
+  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 2) %>% print()
+  print("===================================================")
+}
 
 
 #transform data into 1 fighter per row (find higher correlation between variables)
@@ -209,10 +232,10 @@ for (i in 1:8) {
   print("===================================================")
 }
 
-# FAMD by fight_type (wrong odds transformed)
+# FAMD by fight_type (underdog won transformed)
 res.famdby <- wrong_odds %>% 
   group_by(Fight_type) %>% 
-  do(pca = FAMD(., ncp = 5, sup.var = c(9,10,15,16,17,18), graph = F)) %>%
+  do(pca = FAMD(., ncp = 5, sup.var = c(9,10,15,16,17), graph = F)) %>%
   mutate(contrib = list(list()))
 
 for (i in 1:8) {
@@ -236,3 +259,6 @@ for (i in 1:8) {
   fviz_contrib(res.famdby[[2]][[i]], "var", axes = 2) %>% print()
   print("===================================================")
 }
+
+#final dataset based on FAMD
+fin.var <- 
