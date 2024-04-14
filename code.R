@@ -120,12 +120,10 @@ fviz_contrib(res.famd, "var", axes = 2)
 
 
 # FAMD by fight_type (whole)
-
-# Separate PCA plot for each Fight type
-# Apply our defined PCA-function where each unique INDICES are handled as a separate function call
+# supp variables: win_by, fight_type, winner, R_fighter, B_fighter (17,18,19,28,29)
 res.famdby <- inc %>% 
   group_by(Fight_type) %>% 
-  do(pca = FAMD(., ncp = 10, sup.var = c(17,18,19,28,29), graph = F)) %>%
+  do(pca = FAMD(., ncp = 8, sup.var = c(17,18,19,28,29), graph = F)) %>%
   mutate(contrib = list(list()))
 
 for (i in 1:8) {
