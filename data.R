@@ -71,7 +71,8 @@ inc <- c("R_KD", "B_KD", "R_SIG_STR.", "B_SIG_STR.", "R_TOTAL_STR.", "B_TOTAL_ST
          "R_SUB_ATT", "B_SUB_ATT", "R_CTRL", "B_CTRL", "R_HEAD", "B_HEAD", 
          "R_BODY", "B_BODY", "R_DISTANCE", "B_DISTANCE", "win_by", 
          "Fight_type", "Winner", "R_height_cm", "R_reach_in_cm", "R_stance", "R_age",
-         "B_height_cm", "B_reach_in_cm", "B_stance", "B_age", 'R_fighter', 'B_fighter'
+         "B_height_cm", "B_reach_in_cm", "B_stance", "B_age", 'R_fighter', 'B_fighter',
+         'Referee'
          )
 
 inc <- fight[, inc]
