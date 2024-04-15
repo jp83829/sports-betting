@@ -28,56 +28,8 @@ fviz_contrib(res.famd, "var", axes = 1)
 fviz_contrib(res.famd, "var", axes = 2)
 
 
-# FAMD by fight_type (whole)
-# supp variables: win_by, fight_type, winner, R_fighter, B_fighter (17,18,19,28,29)
-res.famdby <- inc %>% 
-  group_by(Fight_type) %>% 
-  do(pca = FAMD(., ncp = 8, sup.var = c(17,18,19,28,29), graph = F)) %>%
-  mutate(contrib = list(list()))
+#transform data into 1 fighter per row 
 
-for (i in 1:8) {
-  print(res.famdby[[1]][[i]])
-  print("---------------------")
-  
-  get_eigenvalue(res.famdby[[2]][[i]]) %>% print()
-  
-  # Contributions to the dimensions
-  var <- get_famd_var(res.famdby[[2]][[i]]) 
-  res.famdby[[3]][[i]] <- var 
-  apply(var$contrib,2,max) %>% print()
-  rownames(var$contrib)[argmax(res.famdby[[3]][[i]][["contrib"]], rows = F)] %>% print()
-
-  print("===================================================")
-}
-
-# FAMD by fight_type (whole) - underdog won
-wrong_odds <- inc %>%
-  subset(B_fighter==Winner)
-
-res.famdby <- wrong_odds %>% 
-  group_by(Fight_type) %>% 
-  do(pca = FAMD(., ncp = 8, sup.var = c(17,18,19,28,29), graph = F)) %>%
-  mutate(contrib = list(list()))
-
-for (i in 1:8) {
-  print(res.famdby[[1]][[i]])
-  print("---------------------")
-  
-  get_eigenvalue(res.famdby[[2]][[i]]) %>% print()
-  
-  # Contributions to the dimensions
-  var <- get_famd_var(res.famdby[[2]][[i]]) 
-  res.famdby[[3]][[i]] <- var 
-  apply(var$contrib,2,max) %>% print()
-  rownames(var$contrib)[argmax(res.famdby[[3]][[i]][["contrib"]], rows = F)] %>% print()
-  
-  print("===================================================")
-}
-
-
-#transform data into 1 fighter per row (find higher correlation between variables)
-
-#R data
 rdf <- inc %>% 
   mutate(opp = B_fighter) %>%
   select(! starts_with("b_")) %>%
@@ -97,61 +49,44 @@ rb_sep <- rbind(rdf, bdf) %>%
 wrong_odds <- rb_sep %>%
   subset((rb=='R' & win_lose=='0') | (rb=='B' & win_lose=='1') ) 
 
-# FAMD by fight_type (whole transformed)
-res.famdby <- rb_sep %>% 
-  group_by(Fight_type) %>% 
-  do(pca = FAMD(., ncp = 5, sup.var = c(9,10,15,16,17), graph = F)) %>%
-  mutate(contrib = list(list()))
 
-for (i in 1:8) {
-  print(res.famdby[[1]][[i]])
-  print("---------------------")
+
+# FAMD by fight_type 
+# supp variables: win_by, fight_type, winner, R_fighter, B_fighter, Referee (17,18,19,28,29,30)
+famdgp <- function(indata,supp) {
+  res.famdby <- indata %>% 
+    group_by(Fight_type) %>% 
+    do(pca = FAMD(., ncp = 8, sup.var = supp, graph = F)) %>%
+    mutate(contrib = list(list()))
   
-  get_eigenvalue(res.famdby[[2]][[i]]) %>% print()
-  
-  # Contributions to the dimensions
-  var <- get_famd_var(res.famdby[[2]][[i]]) 
-  res.famdby[[3]][[i]] <- var 
-  apply(var$contrib,2,max) %>% print()
-  rownames(var$contrib)[argmax(res.famdby[[3]][[i]][["contrib"]], rows = F)] %>% print()
-  
-  par(mfrow=c(1,3))
-  # Plot of variables
-  fviz_famd_var(res.famdby[[2]][[i]], repel = TRUE) %>% print()
-  # Contribution to the first dimension
-  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 1) %>% print()
-  # Contribution to the second dimension
-  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 2) %>% print()
-  print("===================================================")
+  for (i in 1:8) {
+    print(res.famdby[[1]][[i]])
+    print("---------------------")
+    
+    get_eigenvalue(res.famdby[[2]][[i]]) %>% print()
+    
+    # Contributions to the dimensions
+    var <- get_famd_var(res.famdby[[2]][[i]]) 
+    res.famdby[[3]][[i]] <- var 
+    apply(var$contrib,2,max) %>% print()
+    rownames(var$contrib)[argmax(res.famdby[[3]][[i]][["contrib"]], rows = F)] %>% print()
+    
+    print("===================================================")
+  }
 }
 
-# FAMD by fight_type (underdog won transformed)
-res.famdby <- wrong_odds %>% 
-  group_by(Fight_type) %>% 
-  do(pca = FAMD(., ncp = 5, sup.var = c(9,10,15,16,17), graph = F)) %>%
-  mutate(contrib = list(list()))
+# do for whole dataset
+famdgp(inc, c(17,18,19,28,29,30))
 
-for (i in 1:8) {
-  print(res.famdby[[1]][[i]])
-  print("---------------------")
-  
-  get_eigenvalue(res.famdby[[2]][[i]]) %>% print()
-  
-  # Contributions to the dimensions
-  var <- get_famd_var(res.famdby[[2]][[i]]) 
-  res.famdby[[3]][[i]] <- var 
-  apply(var$contrib,2,max) %>% print()
-  rownames(var$contrib)[argmax(res.famdby[[3]][[i]][["contrib"]], rows = F)] %>% print()
-  
-  par(mfrow=c(1,3))
-  # Plot of variables
-  fviz_famd_var(res.famdby[[2]][[i]], repel = TRUE) %>% print()
-  # Contribution to the first dimension
-  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 1) %>% print()
-  # Contribution to the second dimension
-  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 2) %>% print()
-  print("===================================================")
-}
+# do for underdog won
+wrong_odds <- inc %>%
+  subset(B_fighter==Winner)
 
-#final dataset based on FAMD
-fin.var <- 
+famdgp(wrong_odds, c(17,18,19,28,29,30))
+
+#do for win by decision
+dec <- inc %>%
+  subset(grepl("DECISION", str_to_upper(win_by)) )
+
+famdgp(dec, c(17,18,19,28,29))
+
