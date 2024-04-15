@@ -1,3 +1,5 @@
+inc <- import("fights_dm.csv")
+
 # FAMD - general (whole)
 res.famd <- inc %>%
   FAMD(ncp = 16, 
@@ -45,13 +47,6 @@ for (i in 1:8) {
   apply(var$contrib,2,max) %>% print()
   rownames(var$contrib)[argmax(res.famdby[[3]][[i]][["contrib"]], rows = F)] %>% print()
 
-  par(mfrow=c(1,3))
-  # Plot of variables
-  fviz_famd_var(res.famdby[[2]][[i]], repel = TRUE) %>% print()
-  # Contribution to the first dimension
-  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 1) %>% print()
-  # Contribution to the second dimension
-  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 2) %>% print()
   print("===================================================")
 }
 
@@ -61,7 +56,7 @@ wrong_odds <- inc %>%
 
 res.famdby <- wrong_odds %>% 
   group_by(Fight_type) %>% 
-  do(pca = FAMD(., ncp = 10, sup.var = c(17,18,19,28,29), graph = F)) %>%
+  do(pca = FAMD(., ncp = 8, sup.var = c(17,18,19,28,29), graph = F)) %>%
   mutate(contrib = list(list()))
 
 for (i in 1:8) {
@@ -76,13 +71,6 @@ for (i in 1:8) {
   apply(var$contrib,2,max) %>% print()
   rownames(var$contrib)[argmax(res.famdby[[3]][[i]][["contrib"]], rows = F)] %>% print()
   
-  par(mfrow=c(1,3))
-  # Plot of variables
-  fviz_famd_var(res.famdby[[2]][[i]], repel = TRUE) %>% print()
-  # Contribution to the first dimension
-  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 1) %>% print()
-  # Contribution to the second dimension
-  fviz_contrib(res.famdby[[2]][[i]], "var", axes = 2) %>% print()
   print("===================================================")
 }
 
