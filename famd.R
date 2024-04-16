@@ -88,5 +88,4 @@ famdgp(wrong_odds, c(17,18,19,28,29,30))
 dec <- inc %>%
   subset(grepl("DECISION", str_to_upper(win_by)) )
 
-famdgp(dec, c(17,18,19,28,29))
-
+famdgp(dec, c(17,18,19,28,29,30))
