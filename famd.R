@@ -56,7 +56,7 @@ wrong_odds <- rb_sep %>%
 famdgp <- function(indata,supp) {
   res.famdby <- indata %>% 
     group_by(Fight_type) %>% 
-    do(pca = FAMD(., ncp = 8, sup.var = supp, graph = F)) %>%
+    do(pca = FAMD(., ncp = 4, sup.var = supp, graph = F)) %>%
     mutate(contrib = list(list()))
   
   for (i in 1:8) {
