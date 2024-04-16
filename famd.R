@@ -83,9 +83,3 @@ wrong_odds <- inc %>%
   subset(B_fighter==Winner)
 
 famdgp(wrong_odds, c(17,18,19,28,29,30))
-
-#do for win by decision
-dec <- inc %>%
-  subset(grepl("DECISION", str_to_upper(win_by)) )
-
-famdgp(dec, c(17,18,19,28,29,30))
