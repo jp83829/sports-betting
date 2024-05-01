@@ -10,5 +10,6 @@ pacman::p_load(
   skimr,
   GGally,
   eeptools,
-  ramify 
+  ramify,
+  randomForest
   )
