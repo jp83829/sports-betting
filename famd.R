@@ -28,29 +28,6 @@ fviz_contrib(res.famd, "var", axes = 1)
 fviz_contrib(res.famd, "var", axes = 2)
 
 
-#transform data into 1 fighter per row 
-
-rdf <- inc %>% 
-  mutate(opp = B_fighter) %>%
-  select(! starts_with("b_")) %>%
-  mutate(rb = "R") %>%
-  rename_all(~stringr::str_replace_all(.,"^R_",""))
-
-bdf <- inc %>% 
-  mutate(opp = R_fighter) %>%
-  select(! starts_with("r_")) %>%
-  mutate(rb = "B") %>%
-  rename_all(~stringr::str_replace_all(.,"^B_",""))
-
-rb_sep <- rbind(rdf, bdf) %>%
-  mutate(win_lose = ifelse(fighter==Winner,'1','0')) %>%
-  select(-Winner)
-
-wrong_odds <- rb_sep %>%
-  subset((rb=='R' & win_lose=='0') | (rb=='B' & win_lose=='1') ) 
-
-
-
 # FAMD by fight_type 
 # supp variables: win_by, fight_type, winner, R_fighter, B_fighter, Referee (17,18,19,28,29,30)
 famdgp <- function(indata,supp) {
@@ -83,3 +60,4 @@ wrong_odds <- inc %>%
   subset(B_fighter==Winner)
 
 famdgp(wrong_odds, c(17,18,19,28,29,30))
+
