@@ -38,3 +38,4 @@ var_wel <- c("R_TOTAL_STR.", "B_TOTAL_STR.", "R_SIG_STR.", "B_SIG_STR.",
              "R_age", "B_age", "R_reach_in_cm", "B_reach_in_cm",
              "R_HEAD", "B_HEAD", "Fight_type", "Winner", 'R_fighter', 'B_fighter'
 )
+
