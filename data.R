@@ -77,3 +77,32 @@ inc <- c("R_KD", "B_KD", "R_SIG_STR.", "B_SIG_STR.", "R_TOTAL_STR.", "B_TOTAL_ST
 
 inc <- fight[, inc]
 write.csv(inc,"fights_dm.csv", row.names = FALSE)
+
+
+#transform data into 1 fighter per row - for check
+fights_dm <- import("fights_dm.csv")
+
+rdf <- fights_dm %>% 
+  mutate(opp = B_fighter) %>%
+  select(! starts_with("b_")) %>%
+  mutate(rb = "R") %>%
+  rename_all(~stringr::str_replace_all(.,"^R_",""))
+
+bdf <- fights_dm %>% 
+  mutate(opp = R_fighter) %>%
+  select(! starts_with("r_")) %>%
+  mutate(rb = "B") %>%
+  rename_all(~stringr::str_replace_all(.,"^B_",""))
+
+rb_sep <- rbind(rdf, bdf) %>%
+  mutate(win_lose = ifelse(fighter==Winner,'1','0')) %>%
+  select(-Winner)
+
+# Winner distribution
+win <- rb_sep %>%
+  subset(win_lose=='1')
+table(win$rb)
+  
+wrong_odds <- rb_sep %>%
+  subset((rb=='R' & win_lose=='0') | (rb=='B' & win_lose=='1') ) 
+
