@@ -4,6 +4,7 @@ am2ip <- function(podds, nodds){
   ip_n <- (abs(nodds) / (abs(nodds) + 100)) * 100
   
   house_edge <- (ip_p + ip_n) - 100
+  print("House Edge = ") 
   print(house_edge)
   if (house_edge <0){
     print("100% proffitable wager ratio (negative/positive):")
