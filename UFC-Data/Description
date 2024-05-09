@@ -1,0 +1,6 @@
+AllFightEvent.csv -> Sourced from 'http://ufcstats.com/statistics/events/completed'. 
+  Contains fight level data ['R_fighter', 'B_fighter','Winning Method','Weight Class', 'Date', 'Location','Referee','R_KD','B_KD', 'R_SIG_STR', 'B_SIG_STR', 'R_TOTAL_STR','B_TOTAL_STR','R_TD','B_TD','R_SUB_ATT','B_SUB_ATT','R_REV','B_REV','R_CTRL','B_CTRL',
+                'R_HEAD','B_HEAD','R_BODY','B_BODY','R_LEG','B_LEG','R_DISTANCE','B_DISTANCE','R_CLINCH','B_CLINCH','R_GROUND','B_GROUND'[
+
+All_UFC_Odds.csv -> Sourced from 'https://fightodds.io/'. 
+  Contains sports-betting odds related data ['R_fighter', 'B_fighter', 'R_odds', 'B_odds', 'Event', 'City', 'Date']
